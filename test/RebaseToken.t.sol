@@ -22,7 +22,8 @@ contract RebaseTokenTest is Test {
     }
 
     function addRewardsToTheVault(uint256 amount) public {
-        payable(address(vault)).call{value: amount}("");
+        (bool success, ) = payable(address(vault)).call{value: amount}("");
+        require(success, "Failed to send Ether to vault");
     }
 
     function testDepositLinear(uint256 amount) public {
