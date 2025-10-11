@@ -21,12 +21,13 @@ contract RebaseTokenPool is TokenPool {
         // address originalSender = abi.decode(lockOrBurnIn.originalSender ,(address));
         // address originalSender = address(uint160(bytes20(lockOrBurnIn.originalSender)));
         uint256 userIntrestRate = IRebaseToken(address(i_token)).getUserInterestRate(lockOrBurnIn.originalSender);
-        IRebaseToken(address(i_token)).burn(address(this),lockOrBurnIn.amount);
+        IRebaseToken(address(i_token)).burn(address(this), lockOrBurnIn.amount);
         lockOrBurnOut = Pool.LockOrBurnOutV1({
             destTokenAddress: getRemoteToken(lockOrBurnIn.remoteChainSelector),
             destPoolData: abi.encode(userIntrestRate)
         });
     }
+
     function releaseOrMint(Pool.ReleaseOrMintInV1 calldata releaseOrMintIn)
         external
         override
@@ -35,8 +36,6 @@ contract RebaseTokenPool is TokenPool {
         _validateReleaseOrMint(releaseOrMintIn);
         uint256 userInterfaceRate = abi.decode(releaseOrMintIn.sourcePoolData, (uint256));
         IRebaseToken(address(i_token)).mint(releaseOrMintIn.receiver, releaseOrMintIn.amount, userInterfaceRate);
-        return Pool.ReleaseOrMintOutV1({
-            destinationAmount: releaseOrMintIn.amount
-        });
+        return Pool.ReleaseOrMintOutV1({destinationAmount: releaseOrMintIn.amount});
     }
 }
