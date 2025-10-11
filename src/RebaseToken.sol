@@ -151,7 +151,7 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
      * @return s_intrestRate
      * @dev returns the global interest rate of the token for future depositors
      */
-    function getIntrestRate() external view returns (uint256) {
+    function getInterestRate() external view returns (uint256) {
         return s_intrestRate;
     }
 
