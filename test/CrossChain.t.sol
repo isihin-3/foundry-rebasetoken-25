@@ -10,6 +10,8 @@ import {CCIPLocalSimulatorFork, Register} from "@chainlink/local/src/ccip/CCIPLo
 import {IERC20} from "@ccip/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {RegistryModuleOwnerCustom} from "@ccip/contracts/src/v0.8/ccip/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
 import {TokenAdminRegistry} from "@ccip/contracts/src/v0.8/ccip/tokenAdminRegistry/TokenAdminRegistry.sol";
+import {TokenPool} from "@ccip/contracts/src/v0.8/ccip/pools/TokenPool.sol";
+import {RateLimiter} from "@ccip/contracts/src/v0.8/ccip/libraries/RateLimiter.sol";
 
 import {IRebaseToken} from "../src/interfaces/IRebaseToken.sol";
 
@@ -66,6 +68,7 @@ contract CrossChainTest is Test {
         // 2. Deploy and configyre on arb-sepolia
         vm.selectFork(arbSepoliaFork);
         arbSepoliaNetworkDetails = ccipLocalSimulatorFork.getNetworkDetails(block.chainid);
+        vm.startPrank(owner);
         arbSepoliaToken = new RebaseToken();
         arbSepoliaPool = new RebaseTokenPool(
             IERC20(address(arbSepoliaToken)),
@@ -74,13 +77,44 @@ contract CrossChainTest is Test {
             arbSepoliaNetworkDetails.routerAddress
         );
         arbSepoliaToken.grantMintAndBurnRole(address(vault));
-        sepoliaToken.grantMintAndBurnRole(address(arbSepoliaPool));
+        arbSepoliaToken.grantMintAndBurnRole(address(arbSepoliaPool));
         registryModuleOwnerCustomarbSepolia =
             RegistryModuleOwnerCustom(sepoliaNetworkDetails.registryModuleOwnerCustomAddress);
         registryModuleOwnerCustomarbSepolia.registerAdminViaOwner(address(arbSepoliaToken));
         tokenAdminRegistryarbSepolia = TokenAdminRegistry(sepoliaNetworkDetails.tokenAdminRegistryAddress);
         tokenAdminRegistryarbSepolia.acceptAdminRole(address(arbSepoliaToken));
+
+        configureTokenPool(
+            sepoliaFork, sepoliaPool, arbSepoliaPool, IRebaseToken(address(arbSepoliaToken)), arbSepoliaNetworkDetails
+        );
+        configureTokenPool(
+            arbSepoliaFork, arbSepoliaPool, sepoliaPool, IRebaseToken(address(sepoliaToken)), sepoliaNetworkDetails
+        );
+        vm.stopPrank();
+    }
+
+    function configureTokenPool(
+        uint256 fork,
+        TokenPool localPool,
+        TokenPool remotePool,
+        IRebaseToken remoteToken,
+        Register.NetworkDetails memory remoteNetworkDetails
+    ) public {
+        vm.selectFork(fork);
         vm.startPrank(owner);
+        TokenPool.ChainUpdate[] memory chains = new TokenPool.ChainUpdate[](1);
+
+        chains[0] = TokenPool.ChainUpdate({
+            remoteChainSelector: remoteNetworkDetails.chainSelector,
+            allowed: true,
+            remotePoolAddress: abi.encode(address(remotePool)),
+            remoteTokenAddress: abi.encode(address(remoteToken)),
+            outboundRateLimiterConfig: RateLimiter.Config({isEnabled: false, capacity: 0, rate: 0}),
+            inboundRateLimiterConfig: RateLimiter.Config({isEnabled: false, capacity: 0, rate: 0})
+        });
+
+        localPool.applyChainUpdates(chains);
+
         vm.stopPrank();
     }
 }
