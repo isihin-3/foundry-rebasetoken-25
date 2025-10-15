@@ -119,9 +119,9 @@ contract RebaseTokenTest is Test {
 
         uint256 userBalanceAfterWarp = rebaseToken.balanceOf(user);
         uint256 userTwoBalanceAfterWarp = rebaseToken.balanceOf(user2);
-        uint256 userTwoInterestRate = rebaseToken.getUserInterest(user2);
+        uint256 userTwoInterestRate = rebaseToken.getUserInterestRate(user2);
         assertEq(userTwoInterestRate, 5e10);
-        uint256 userInterestRate = rebaseToken.getUserInterest(user);
+        uint256 userInterestRate = rebaseToken.getUserInterestRate(user);
         assertEq(userInterestRate, 5e10);
 
         assertGt(userBalanceAfterWarp, userBalanceAfterTransfer);
