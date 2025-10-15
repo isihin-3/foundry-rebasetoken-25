@@ -43,7 +43,7 @@ contract CrossChainTest is Test {
     RegistryModuleOwnerCustom registryModuleOwnerCustomSepolia;
     RegistryModuleOwnerCustom registryModuleOwnerCustomarbSepolia;
 
-    function setUp() public 
+    function setUp() public {
         sepoliaFork = vm.createSelectFork("sepolia");
         arbSepoliaFork = vm.createFork("arb-sepolia");
 
