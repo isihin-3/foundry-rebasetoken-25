@@ -99,7 +99,7 @@ contract CrossChainTest is Test {
             arbSepoliaFork, arbSepoliaPool, sepoliaPool, IRebaseToken(address(sepoliaToken)), sepoliaNetworkDetails
         );
         vm.stopPrank();
-    
+    }
 
     function configureTokenPool(
         uint256 fork,
