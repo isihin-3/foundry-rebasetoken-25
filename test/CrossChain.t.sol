@@ -144,7 +144,7 @@ contract CrossChainTest is Test {
             data: "",
             tokenAmounts: tokenAmounts,
             feeToken: localNetworkDetails.linkAddress,
-            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 100_000}))
+            extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({gasLimit: 500_000}))
         });
         uint256 fee =
             IRouterClient(localNetworkDetails.routerAddress).getFee(remoteNetworkDetails.chainSelector, message);
@@ -160,12 +160,9 @@ contract CrossChainTest is Test {
         uint256 localBalanceAfter = localToken.balanceOf(alice);
         assertEq(localBalanceAfter, localBalanceBefore - amountToBridge);
         uint256 localUserInterestRate = localToken.getUserInterestRate(alice);
-        vm.selectFork(remoteFork);
-        vm.warp(block.timestamp + 20 minutes);
-        uint256 remoteBalanceBefore = remoteToken.balanceOf(alice);
         ccipLocalSimulatorFork.switchChainAndRouteMessage(remoteFork);
         uint256 remoteBalanceAfter = remoteToken.balanceOf(alice);
-        assertEq(remoteBalanceAfter, remoteBalanceBefore + amountToBridge);
+        assertEq(remoteBalanceAfter, amountToBridge);
         uint256 remoteUserInterestRate = remoteToken.getUserInterestRate(alice);
         assertEq(localUserInterestRate, remoteUserInterestRate);
     }
@@ -184,6 +181,17 @@ contract CrossChainTest is Test {
             arbSepoliaNetworkDetails,
             sepoliaToken,
             arbSepoliaToken
+        );
+        vm.selectFork(arbSepoliaFork);
+        vm.warp(block.timestamp + 20 minutes);
+        bridgeTokens(
+            arbSepoliaToken.balanceOf(alice),
+            arbSepoliaFork,
+            sepoliaFork,
+            arbSepoliaNetworkDetails,
+            sepoliaNetworkDetails,
+            arbSepoliaToken,
+            sepoliaToken
         );
     }
 }
